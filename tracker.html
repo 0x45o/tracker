@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Medication Tracker</title>
+  <style>
+    #medication-list li {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    #medication-list span {
+      flex: 1;
+    }
+    #medication-list input[type="checkbox"] {
+      margin-right: 10px;
+    }
+    #medication-list input[type="time"] {
+      width: 100px;
+      margin-right: 10px;
+    }
+    #medication-list button {
+      background-color: #ff4444;
+      color: white;
+      border: none;
+      padding: 5px;
+      cursor: pointer;
+    }
+    #medication-list button:hover {
+      background-color: #cc0000;
+    }
+  </style>
+</head>
+<body>
+  <h1>Daily Medication Tracker</h1>
+  <ul id="medication-list"></ul>
+  <div>
+    <input type="text" id="new-medication" placeholder="New medication name">
+    <button id="add-medication">Add</button>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const medicationList = document.getElementById('medication-list');
+      const newMedicationInput = document.getElementById('new-medication');
+      const addMedicationButton = document.getElementById('add-medication');
+
+      // Load saved data or start fresh
+      let medications = JSON.parse(localStorage.getItem('medications')) || [];
+      let lastUpdated = localStorage.getItem('lastUpdated') || '';
+      const today = new Date().toISOString().split('T')[0]; // Today’s date like "2025-03-22"
+
+      // Reset taken status and times if it’s a new day
+      if (lastUpdated !== today) {
+        medications.forEach(med => {
+          med.taken = false;
+          med.time = '';
+        });
+        lastUpdated = today;
+        saveData();
+      }
+
+      // Save data to local storage
+      function saveData() {
+        localStorage.setItem('medications', JSON.stringify(medications));
+        localStorage.setItem('lastUpdated', lastUpdated);
+      }
+
+      // Show the list of medications
+      function generateList() {
+        medicationList.innerHTML = ''; // Clear the list
+        medications.forEach((med, index) => {
+          const li = document.createElement('li');
+          li.dataset.index = index;
+          li.innerHTML = `
+            <span>${med.name}</span>
+            <input type="checkbox" class="taken-checkbox" ${med.taken ? 'checked' : ''}>
+            <input type="time" class="time-input" value="${med.time || ''}">
+            <button class="remove-button">Remove</button>
+          `;
+          // Update when checkbox is clicked
+          const checkbox = li.querySelector('.taken-checkbox');
+          checkbox.addEventListener('change', (e) => {
+            const idx = parseInt(li.dataset.index);
+            medications[idx].taken = e.target.checked;
+            saveData();
+          });
+          // Update when time is entered
+          const timeInput = li.querySelector('.time-input');
+          timeInput.addEventListener('change', (e) => {
+            const idx = parseInt(li.dataset.index);
+            medications[idx].time = e.target.value;
+            saveData();
+          });
+          // Remove medication when button is clicked
+          const removeButton = li.querySelector('.remove-button');
+          removeButton.addEventListener('click', () => {
+            const idx = parseInt(li.dataset.index);
+            medications.splice(idx, 1); // Remove from array
+            saveData();
+            generateList(); // Refresh the list
+          });
+          medicationList.appendChild(li);
+        });
+      }
+
+      // Load the list when the page opens
+      generateList();
+
+      // Add a new medication
+      addMedicationButton.addEventListener('click', () => {
+        const name = newMedicationInput.value.trim();
+        if (name) { // Only add if there’s a name
+          const newMed = { name: name, taken: false, time: '' };
+          medications.push(newMed);
+          saveData();
+          generateList(); // Refresh the list
+          newMedicationInput.value = ''; // Clear the input
+        }
+      });
+    });
+  </script>
+</body>
+</html>
