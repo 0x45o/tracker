@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZDRAVILA</title>
+  <title>Zdravila</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -21,7 +21,7 @@
       padding: 0;
     }
     .container {
-      max-width: 600px;
+      max-width: 800px;
       margin: 0 auto;
       padding: 20px;
       animation: fadeIn 1s ease-in;
@@ -34,7 +34,17 @@
       text-align: center;
       margin-bottom: 20px;
     }
-    #medication-list {
+    .day-card {
+      background-color: var(--card-background);
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+    }
+    .day-card h2 {
+      margin: 0 0 10px;
+      color: var(--accent-color);
+    }
+    .medication-list {
       list-style: none;
       padding: 0;
     }
@@ -42,7 +52,6 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background-color: var(--card-background);
       padding: 10px;
       margin-bottom: 10px;
       border-radius: 5px;
@@ -107,7 +116,7 @@
     }
     #new-medication {
       padding: 10px;
-      width: 70%;
+      width: 60%;
       border: 1px solid var(--text-color);
       border-radius: 5px;
       background-color: var(--card-background);
@@ -116,6 +125,14 @@
     #new-medication:focus {
       border-color: var(--accent-color);
       outline: none;
+    }
+    #day-select {
+      padding: 10px;
+      margin-left: 10px;
+      border: 1px solid var(--text-color);
+      border-radius: 5px;
+      background-color: var(--card-background);
+      color: var(--text-color);
     }
     #add-medication {
       padding: 10px 20px;
@@ -130,74 +147,103 @@
 </head>
 <body>
   <div class="container">
-    <h1>ZDRAVILA</h1>
-    <ul id="medication-list"></ul>
+    <h1>Zdravila</h1>
+    <div id="week-container"></div>
     <div class="add-medication">
       <input type="text" id="new-medication" placeholder="Dodaj zdravilo">
-      <button id="add-medication">Add</button>
+      <select id="day-select"></select>
+      <button id="add-medication">Dodaj</button>
     </div>
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const medicationList = document.getElementById('medication-list');
+      const weekContainer = document.getElementById('week-container');
       const newMedicationInput = document.getElementById('new-medication');
+      const daySelect = document.getElementById('day-select');
       const addMedicationButton = document.getElementById('add-medication');
 
-      let medications = JSON.parse(localStorage.getItem('medications')) || [];
-      let lastUpdated = localStorage.getItem('lastUpdated') || '';
-      const today = new Date().toISOString().split('T')[0];
+      const daysOfWeek = ['Nedelja', 'Ponedeljek', 'Torek', 'Sreda', 'Četrtek', 'Petek', 'Sobota'];
+      const today = new Date();
+      const weekDates = [];
 
-      if (lastUpdated !== today) {
-        medications.forEach(med => med.taken = false);
-        lastUpdated = today;
-        saveData();
+      // Generate dates for the next 7 days
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        weekDates.push(date.toISOString().split('T')[0]);
       }
+
+      // Populate day select options
+      weekDates.forEach((date, index) => {
+        const option = document.createElement('option');
+        option.value = date;
+        option.textContent = `${daysOfWeek[(today.getDay() + index) % 7]} - ${date}`;
+        daySelect.appendChild(option);
+      });
+
+      // Load medications from localStorage
+      let medications = JSON.parse(localStorage.getItem('medications')) || {};
+      weekDates.forEach(date => {
+        if (!medications[date]) {
+          medications[date] = [];
+        }
+      });
 
       function saveData() {
         localStorage.setItem('medications', JSON.stringify(medications));
-        localStorage.setItem('lastUpdated', lastUpdated);
       }
 
-      function generateList() {
-        medicationList.innerHTML = '';
-        medications.forEach((med, index) => {
-          const li = document.createElement('li');
-          li.className = 'medication-item';
-          li.dataset.index = index;
-          li.innerHTML = `
-            <label>
-              <input type="checkbox" class="taken-checkbox" ${med.taken ? 'checked' : ''}>
-              <span class="checkbox-custom"></span>
-              <span class="medication-name">${med.name}</span>
-            </label>
-            <button class="remove-button">X</button>
-          `;
-          const checkbox = li.querySelector('.taken-checkbox');
-          checkbox.addEventListener('change', (e) => {
-            medications[index].taken = e.target.checked;
-            saveData();
-          });
-          const removeButton = li.querySelector('.remove-button');
-          removeButton.addEventListener('click', () => {
-            li.classList.add('removing');
-            setTimeout(() => {
-              medications.splice(index, 1);
+      function generateWeek() {
+        weekContainer.innerHTML = '';
+        weekDates.forEach(date => {
+          const dayCard = document.createElement('div');
+          dayCard.className = 'day-card';
+          dayCard.innerHTML = `<h2>${daysOfWeek[new Date(date).getDay()]} - ${date}</h2>`;
+          const medicationList = document.createElement('ul');
+          medicationList.className = 'medication-list';
+          medications[date].forEach((med, index) => {
+            const li = document.createElement('li');
+            li.className = 'medication-item';
+            li.dataset.index = index;
+            li.dataset.date = date;
+            li.innerHTML = `
+              <label>
+                <input type="checkbox" class="taken-checkbox" ${med.taken ? 'checked' : ''}>
+                <span class="checkbox-custom"></span>
+                <span class="medication-name">${med.name}</span>
+              </label>
+              <button class="remove-button">X</button>
+            `;
+            const checkbox = li.querySelector('.taken-checkbox');
+            checkbox.addEventListener('change', (e) => {
+              medications[date][index].taken = e.target.checked;
               saveData();
-              generateList();
-            }, 500);
+            });
+            const removeButton = li.querySelector('.remove-button');
+            removeButton.addEventListener('click', () => {
+              li.classList.add('removing');
+              setTimeout(() => {
+                medications[date].splice(index, 1);
+                saveData();
+                generateWeek();
+              }, 500);
+            });
+            medicationList.appendChild(li);
           });
-          medicationList.appendChild(li);
+          dayCard.appendChild(medicationList);
+          weekContainer.appendChild(dayCard);
         });
       }
 
-      generateList();
+      generateWeek();
 
       addMedicationButton.addEventListener('click', () => {
         const name = newMedicationInput.value.trim();
-        if (name) {
-          medications.push({ name: name, taken: false });
+        const date = daySelect.value;
+        if (name && date) {
+          medications[date].push({ name: name, taken: false });
           saveData();
-          generateList();
+          generateWeek();
           newMedicationInput.value = '';
         }
       });
