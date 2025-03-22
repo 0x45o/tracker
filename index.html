@@ -4,316 +4,149 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Daily Medication Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
   <style>
-    /* General Styles */
+    :root {
+      --background-color: #121212;
+      --text-color: #E0E0E0;
+      --accent-color: #00BFFF;
+      --card-background: #1E1E1E;
+      --remove-color: #FF5252;
+    }
     body {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      font-family: 'Roboto', sans-serif;
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to bottom, #87CEEB 80%, #32CD32 80%);
-      overflow-x: hidden;
     }
-
-    .sky {
-      position: relative;
-      min-height: 100vh;
-      padding-bottom: 100px;
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      animation: fadeIn 1s ease-in;
     }
-
-    /* Sky Elements */
-    .sun {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 100px;
-      height: 100px;
-      background: #FFD700;
-      border-radius: 50%;
-      box-shadow: 0 0 20px #FFA500;
-      animation: pulse 2s infinite;
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-
-    .cloud {
-      position: absolute;
-      background: white;
-      border-radius: 50%;
-      opacity: 0.9;
-      animation: drift 20s linear infinite;
-    }
-
-    .cloud:nth-child(1) {
-      top: 50px;
-      left: 100px;
-      width: 100px;
-      height: 30px;
-    }
-
-    .cloud:nth-child(2) {
-      top: 100px;
-      left: 300px;
-      width: 150px;
-      height: 40px;
-      animation-delay: -10s;
-    }
-
-    .cloud:nth-child(3) {
-      top: 150px;
-      left: 500px;
-      width: 120px;
-      height: 35px;
-      animation-delay: -5s;
-    }
-
-    @keyframes drift {
-      from { transform: translateX(-100px); }
-      to { transform: translateX(100vw); }
-    }
-
-    /* Title */
     h1 {
       text-align: center;
-      color: #FFF;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-      font-size: 2.5em;
-      padding-top: 20px;
+      margin-bottom: 20px;
     }
-
-    /* Garden Area */
-    .garden {
+    #medication-list {
+      list-style: none;
+      padding: 0;
+    }
+    .medication-item {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      padding: 20px;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--card-background);
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      transition: opacity 0.5s ease;
     }
-
-    /* Flower Styles */
-    .flower {
-      position: relative;
-      width: 120px;
-      height: 180px;
-      margin: 25px;
-      animation: sway 3s ease-in-out infinite;
+    .medication-item.removing {
+      opacity: 0;
     }
-
-    @keyframes sway {
-      0% { transform: rotate(2deg); }
-      50% { transform: rotate(-2deg); }
-      100% { transform: rotate(2deg); }
+    label {
+      display: flex;
+      align-items: center;
+      flex-grow: 1;
     }
-
-    .stem {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 12px;
-      height: 120px;
-      background: linear-gradient(to top, #228B22, #9ACD32);
-      border-radius: 5px 5px 0 0;
-    }
-
-    .name {
-      position: absolute;
-      bottom: -25px;
-      left: 50%;
-      transform: translateX(-50%);
-      white-space: nowrap;
-      color: #FFF;
-      text-shadow: 1px 1px 2px #000;
-      font-size: 14px;
-      font-weight: bold;
-    }
-
-    .flower-head {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60px;
-      height: 60px;
-      background: #FFD700;
-      border-radius: 50%;
-      z-index: 1;
-    }
-
-    .petal {
-      position: absolute;
-      width: 25px;
-      height: 50px;
-      background: #FF69B4;
-      border-radius: 50%;
-      top: 50%;
-      left: 50%;
-      transform-origin: 50% 100%;
-      transform: rotate(0deg) scaleY(0);
-      transition: transform 0.5s ease, background 0.3s ease;
-    }
-
-    .flower.bloomed .petal {
-      transform: rotate(var(--angle)) scaleY(1);
-      background: #FF1493;
-    }
-
-    /* Checkbox as Leaf */
-    .checkbox-label {
-      position: absolute;
-      left: -25px;
-      top: 60px;
-      z-index: 2;
-    }
-
     .taken-checkbox {
       display: none;
     }
-
-    .leaf {
+    .checkbox-custom {
       display: inline-block;
-      width: 25px;
-      height: 35px;
-      background: #98FB98;
-      border-radius: 50% 0;
-      transform: rotate(45deg);
-      transition: background 0.3s ease;
-    }
-
-    .taken-checkbox:checked + .leaf {
-      background: #006400;
-    }
-
-    /* Remove Button */
-    .remove-button {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: #FF4500;
-      border: none;
-      border-radius: 50%;
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
-      padding: 0;
-      z-index: 2;
-    }
-
-    .remove-icon {
-      width: 16px;
-      height: 16px;
-      vertical-align: middle;
-    }
-
-    /* Add Medication Section */
-    .add-section {
-      text-align: center;
-      margin: 20px 0;
-    }
-
-    #new-medication {
-      padding: 8px;
-      width: 220px;
-      border: 2px solid #9ACD32;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-
-    #add-medication {
-      padding: 8px 15px;
-      background: #228B22;
-      color: #FFF;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: transform 0.2s ease;
-    }
-
-    #add-medication:hover {
-      transform: scale(1.1);
-    }
-
-    .seed-icon {
-      width: 16px;
-      height: 16px;
-      vertical-align: middle;
-      margin-right: 5px;
-    }
-
-    /* Butterfly Animation */
-    .butterfly {
-      position: absolute;
       width: 20px;
-      height: 15px;
-      background: #FFA500;
-      border-radius: 50%;
-      animation: flutter 5s infinite ease-in-out;
+      height: 20px;
+      border: 2px solid var(--text-color);
+      border-radius: 4px;
+      position: relative;
+      margin-right: 10px;
     }
-
-    .butterfly:nth-child(1) {
-      top: 200px;
-      left: 10%;
-      animation-delay: 0s;
+    .taken-checkbox:checked + .checkbox-custom {
+      background-color: var(--accent-color);
+      border-color: var(--accent-color);
     }
-
-    .butterfly:nth-child(2) {
-      top: 300px;
-      left: 70%;
-      animation-delay: -2s;
-      background: #FF69B4;
+    .taken-checkbox:checked + .checkbox-custom::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      background-color: white;
+      border-radius: 2px;
     }
-
-    @keyframes flutter {
-      0% { transform: translateY(0) rotate(0deg); }
-      25% { transform: translateY(-20px) rotate(10deg); }
-      50% { transform: translateY(0) rotate(0deg); }
-      75% { transform: translateY(20px) rotate(-10deg); }
-      100% { transform: translateY(0) rotate(0deg); }
+    .medication-name {
+      flex-grow: 1;
+    }
+    .taken-checkbox:checked ~ .medication-name {
+      text-decoration: line-through;
+      color: #888;
+    }
+    .remove-button {
+      background: none;
+      border: none;
+      color: var(--remove-color);
+      font-size: 18px;
+      cursor: pointer;
+    }
+    .remove-button:hover {
+      color: #FF1744;
+    }
+    .add-medication {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    #new-medication {
+      padding: 10px;
+      width: 70%;
+      border: 1px solid var(--text-color);
+      border-radius: 5px;
+      background-color: var(--card-background);
+      color: var(--text-color);
+    }
+    #new-medication:focus {
+      border-color: var(--accent-color);
+      outline: none;
+    }
+    #add-medication {
+      padding: 10px 20px;
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-left: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="sky">
-    <!-- Sun and Clouds -->
-    <div class="sun"></div>
-    <div class="cloud"></div>
-    <div class="cloud"></div>
-    <div class="cloud"></div>
-    <!-- Butterflies -->
-    <div class="butterfly"></div>
-    <div class="butterfly"></div>
-    <!-- Title -->
+  <div class="container">
     <h1>Daily Medication Tracker</h1>
-    <!-- Garden (Medication List) -->
-    <div id="medication-list" class="garden"></div>
-    <!-- Add Medication -->
-    <div class="add-section">
+    <ul id="medication-list"></ul>
+    <div class="add-medication">
       <input type="text" id="new-medication" placeholder="New medication name">
-      <button id="add-medication">
-        <svg class="seed-icon" width="16" height="16" viewBox="0 0 16 16">
-          <ellipse cx="8" cy="10" rx="4" ry="2" fill="brown"/>
-          <line x1="8" y1="10" x2="8" y2="6" stroke="brown" stroke-width="2"/>
-        </svg>
-        Add
-      </button>
+      <button id="add-medication">Add</button>
     </div>
   </div>
-
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const medicationList = document.getElementById('medication-list');
       const newMedicationInput = document.getElementById('new-medication');
       const addMedicationButton = document.getElementById('add-medication');
 
-      // Load or initialize medications
       let medications = JSON.parse(localStorage.getItem('medications')) || [];
       let lastUpdated = localStorage.getItem('lastUpdated') || '';
       const today = new Date().toISOString().split('T')[0];
 
-      // Reset taken status if it's a new day
       if (lastUpdated !== today) {
         medications.forEach(med => med.taken = false);
         lastUpdated = today;
@@ -328,68 +161,37 @@
       function generateList() {
         medicationList.innerHTML = '';
         medications.forEach((med, index) => {
-          const flower = document.createElement('div');
-          flower.className = 'flower';
-          flower.dataset.index = index;
-
-          // Generate 5 petals with angles
-          const angles = [0, 72, 144, 216, 288];
-          const petals = angles.map(angle => 
-            `<div class="petal" style="--angle: ${angle}deg"></div>`
-          ).join('');
-
-          flower.innerHTML = `
-            <div class="stem">
-              <span class="name">${med.name}</span>
-              <label class="checkbox-label">
-                <input type="checkbox" class="taken-checkbox" ${med.taken ? 'checked' : ''}>
-                <span class="leaf"></span>
-              </label>
-            </div>
-            <div class="flower-head">
-              ${petals}
-            </div>
-            <button class="remove-button">
-              <svg class="remove-icon" width="16" height="16" viewBox="0 0 16 16">
-                <line x1="4" y1="4" x2="12" y2="12" stroke="white" stroke-width="2"/>
-                <line x1="4" y1="12" x2="12" y2="4" stroke="white" stroke-width="2"/>
-              </svg>
-            </button>
+          const li = document.createElement('li');
+          li.className = 'medication-item';
+          li.dataset.index = index;
+          li.innerHTML = `
+            <label>
+              <input type="checkbox" class="taken-checkbox" ${med.taken ? 'checked' : ''}>
+              <span class="checkbox-custom"></span>
+              <span class="medication-name">${med.name}</span>
+            </label>
+            <button class="remove-button">X</button>
           `;
-
-          // Apply bloomed class if medication is taken
-          if (med.taken) {
-            flower.classList.add('bloomed');
-          }
-
-          // Checkbox event listener
-          const checkbox = flower.querySelector('.taken-checkbox');
+          const checkbox = li.querySelector('.taken-checkbox');
           checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-              flower.classList.add('bloomed');
-            } else {
-              flower.classList.remove('bloomed');
-            }
             medications[index].taken = e.target.checked;
             saveData();
           });
-
-          // Remove button event listener
-          const removeButton = flower.querySelector('.remove-button');
+          const removeButton = li.querySelector('.remove-button');
           removeButton.addEventListener('click', () => {
-            medications.splice(index, 1);
-            saveData();
-            generateList();
+            li.classList.add('removing');
+            setTimeout(() => {
+              medications.splice(index, 1);
+              saveData();
+              generateList();
+            }, 500);
           });
-
-          medicationList.appendChild(flower);
+          medicationList.appendChild(li);
         });
       }
 
-      // Initial list generation
       generateList();
 
-      // Add medication event
       addMedicationButton.addEventListener('click', () => {
         const name = newMedicationInput.value.trim();
         if (name) {
